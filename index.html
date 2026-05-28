@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BOMAPP">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="bomapp-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css?v=bomapp-05">
+<title>TCG BOM Bitchslap APP</title>
+<meta name="description" content="TCG Machines BOM builder for MRPeasy, Odoo, SOLIDWORKS import, and internal app alerts.">
+</head>
+<body class="dashboard-mode font-v4 clean-v5">
+<div class="bg-art" aria-hidden="true"></div>
+<header class="topbar">
+  <a class="return-link" href="index.html" data-nav="dashboard">BOMAPP</a>
+  <div class="brand-mini">
+    <img src="tcg-logo-transparent.png" alt="TCG Machines">
+    <span>BOM BITCHSLAP APP</span>
+  </div>
+  <button class="ghost small" type="button" data-nav="dashboard">Dashboard</button>
+</header>
+
+<main class="app-shell">
+  <section id="page-dashboard" class="page active">
+    <section class="clean-dashboard-stage">
+      <div class="clean-dashboard-content">
+        <div class="clean-brand">
+          <img src="tcg-logo-transparent.png" alt="TCG Machines">
+          <span>BOMAPP</span>
+        </div>
+
+        <nav class="clean-dashboard-actions" aria-label="BOMAPP dashboard actions">
+          <button class="dash-action primary" type="button" data-action="create-bom">
+            <span class="dash-icon">+</span>
+            <span class="dash-copy"><strong>Create BOM</strong><small>Build a new BOM with multi-level sections</small></span>
+            <span class="dash-chev">›</span>
+          </button>
+
+          <button class="dash-action" type="button" data-nav="update">
+            <span class="dash-icon">↻</span>
+            <span class="dash-copy"><strong>Update BOM</strong><small>Import drafts or SOLIDWORKS BOM CSV</small></span>
+            <span class="dash-chev">›</span>
+          </button>
+
+          <button class="dash-alert" type="button" data-action="bom-update-needed-alert">
+            <span class="alert-dot">!</span>
+            <span><strong>BOM Update Needed Alert</strong><small>Queue a BOM review request for SOP / process audit</small></span>
+          </button>
+        </nav>
+      </div>
+    </section>
+  </section>
+
+  <section id="page-create" class="page">
+    <section class="page-title">
+      <div>
+        <p class="eyebrow">Create / Edit BOM</p>
+        <h1>Create BOM</h1>
+        <p>Start with a BOM type, then add sections and part lines. Each full BOM can represent a parent assembly, subassembly, SSA, INASS, R&D assembly, or procedure.</p>
+      </div>
+      <button type="button" data-nav="dashboard" class="ghost">Back to Dashboard</button>
+    </section>
+
+    <section class="panel setup-panel">
+      <div class="field-grid">
+        <label>What type of BOM would you like to create?
+          <select id="newBomType">
+            <option value="MA">Main Assembly (MA)</option>
+            <option value="SA">Sub Assembly (SA)</option>
+            <option value="SSA">SSA Assembly (SSA)</option>
+            <option value="INASS">INASS Assembly (INASS)</option>
+            <option value="RNDASS">R&D Assembly (RNDASS)</option>
+            <option value="PROCEDURAL">Procedural BOM</option>
+          </select>
+        </label>
+        <label>BOM / Assembly Number
+          <input id="newBomNumber" placeholder="e.g., SA075, MFG0390, MA-SBX">
+        </label>
+        <label>BOM / Assembly Name
+          <input id="newBomName" placeholder="e.g., Lower Camera Assembly">
+        </label>
+        <label>Impact / SOP action required
+          <select id="newBomImpact">
+            <option value="none">No SOP audit required</option>
+            <option value="required_sop">Required SOP</option>
+            <option value="urgent_process_change">Urgent Process Change</option>
+          </select>
+        </label>
+      </div>
+      <div class="button-row">
+        <button type="button" data-action="add-full-bom">Add This BOM</button>
+        <button type="button" class="purple" data-action="import-solidworks">Import SOLIDWORKS BOM CSV</button>
+        <input id="solidworksFile" class="hidden-file" type="file" accept=".csv,.txt,.tsv">
+      </div>
+    </section>
+
+    <section class="workspace-toolbar panel">
+      <button type="button" data-action="add-empty-bom">Add Another Full BOM Section</button>
+      <button type="button" class="green" data-action="save-draft">Save Draft to Phone/Browser</button>
+      <button type="button" data-action="download-json">Download Editable JSON Draft</button>
+      <button type="button" class="purple" data-action="verify-bom">Verify BOM</button>
+      <button type="button" class="steel" data-action="export-mrp">Export MRPeasy / MRP CSV Pack</button>
+      <button type="button" class="steel" data-action="export-odoo">Export Odoo CSV Pack</button>
+    </section>
+
+    <section id="bomWorkspace" class="bom-workspace"></section>
+    <section id="emptyWorkspace" class="empty-state panel">
+      <h2>No BOM created yet</h2>
+      <p>Pick a BOM type above and hit <strong>Add This BOM</strong>.</p>
+    </section>
+  </section>
+
+  <section id="page-update" class="page">
+    <section class="page-title">
+      <div>
+        <p class="eyebrow">Update / Import</p>
+        <h1>UPDATE BOM</h1>
+        <p>Load a saved draft, import an editable JSON draft, or import a SOLIDWORKS BOM CSV.</p>
+      </div>
+      <button type="button" data-nav="dashboard" class="ghost">Back to Dashboard</button>
+    </section>
+    <section class="dashboard-grid">
+      <article class="panel">
+        <h2>Saved Browser Drafts</h2>
+        <div id="savedDrafts" class="draft-list"></div>
+        <button type="button" data-action="refresh-drafts" class="small">Refresh Drafts</button>
+      </article>
+      <article class="panel">
+        <h2>Import Editable JSON Draft</h2>
+        <p>Use this for drafts downloaded from this app.</p>
+        <input id="jsonDraftFile" type="file" accept=".json">
+      </article>
+      <article class="panel">
+        <h2>Import SOLIDWORKS BOM</h2>
+        <p>Upload a CSV/TXT/TSV from SOLIDWORKS. The app will map Part Number, Description, Qty, and optional image columns into a BOM section.</p>
+        <button type="button" class="purple" data-action="import-solidworks-update">Choose SOLIDWORKS CSV</button>
+        <input id="solidworksFileUpdate" class="hidden-file" type="file" accept=".csv,.txt,.tsv">
+      </article>
+    </section>
+  </section>
+
+  <section id="page-inventory" class="page">
+    <section class="page-title">
+      <div>
+        <p class="eyebrow">Inventory Library</p>
+        <h1>Part Search Setup</h1>
+        <p>Import a CSV with part number, description, quantity per machine, and image/picture columns. This powers the easy prefix search in BOM rows.</p>
+      </div>
+      <button type="button" data-nav="dashboard" class="ghost">Back to Dashboard</button>
+    </section>
+    <section class="panel">
+      <div class="field-grid">
+        <label>Inventory CSV
+          <input id="inventoryFile" type="file" accept=".csv,.txt,.tsv">
+        </label>
+        <label>Search imported inventory
+          <input id="inventorySearch" placeholder="Search by prefix, number, description...">
+        </label>
+      </div>
+      <p class="tiny-note">Accepted headers include: Part Number, Part No., Item, Number, Description, Name, Qty, Quantity per Machine, Picture, Image, Image URL.</p>
+      <div id="inventoryResults" class="inventory-results"></div>
+    </section>
+  </section>
+
+  <section id="page-alerts" class="page">
+    <section class="page-title">
+      <div>
+        <p class="eyebrow">Internal App Alerts</p>
+        <h1>SOP / Inventory / Support Queue</h1>
+        <p>These alerts are created when a BOM requires a new SOP, urgent process change, inventory audit, or support visibility. In static mode, alerts are stored locally; when apps are hosted together, TEAMAPP and SOP Wizard can read the same queue.</p>
+      </div>
+      <button type="button" data-nav="dashboard" class="ghost">Back to Dashboard</button>
+    </section>
+    <section class="panel">
+      <div class="button-row">
+        <button type="button" data-action="export-alerts">Export Alert JSON</button>
+        <button type="button" class="red" data-action="clear-alerts">Clear Local Alerts</button>
+      </div>
+      <div id="alertList" class="alert-list"></div>
+    </section>
+  </section>
+</main>
+
+<datalist id="partSuggestions"></datalist>
+<div id="toast" class="toast" role="status"></div>
+<script src="app.js?v=bomapp-05"></script>
+</body>
+</html>
